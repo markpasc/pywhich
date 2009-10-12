@@ -4,6 +4,7 @@
 # http://interglacial.com/~sburke/pub/lns.html
 curl -o ~/bin/lns http://interglacial.com/~sburke/pub/lns
 chmod +x ~/bin/lns
+echo "Installed lns"
 
 # ack -- grep-like text finder by Andy Lester
 # http://betterthangrep.com/
@@ -12,4 +13,5 @@ chmod +x ~/bin/lns
 #    curl -o ~/bin/ack http://betterthangrep.com/ack-standalone
 curl http://betterthangrep.com/ack-standalone | sed 's/return unless App::Ack::output_to_pipe();/return if App::Ack::output_to_pipe();/' > ~/bin/ack
 chmod +x ~/bin/ack
+echo "Installed ack"
 
