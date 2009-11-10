@@ -14,7 +14,7 @@ class ModuleNotFound(Exception):
     pass
 
 
-def identify_module(arg):
+def identify_module(arg, real_path=None, show_directory=None):
     try:
         __import__(arg)
     except Exception, exc:
@@ -26,7 +26,13 @@ def identify_module(arg):
     if filename.endswith('.pyc') or filename.endswith('.pyo'):
         sourcefile = filename[:-1]
         if os.access(sourcefile, os.F_OK):
-            return sourcefile
+            filename = sourcefile
+
+    if real_path:
+        filename = os.path.realpath(filename)
+
+    if show_directory:
+        filename = os.path.dirname(filename)
 
     return filename
 
@@ -59,19 +65,27 @@ def main(argv=None):
         argv = sys.argv
 
     parser = OptionParser()
+
     parser.add_option('-v', '--verbose', dest="verbose", action="count",
         default=2, help="be chattier (stackable)")
     def quiet(option, opt_str, value, parser):
         parser.values.verbose -= 1
     parser.add_option('-q', '--quiet', action="callback", callback=quiet,
         help="be less chatty (stackable)")
+
+    parser.add_option('-r', action="store_true", dest="real_path",
+        default=False, help="dereference symlinks")
+    parser.add_option('-b', action="store_true", dest="show_directory",
+        default=False, help="show directory instead of filename")
+
     opts, args = parser.parse_args()
 
     log_levels = (logging.CRITICAL, logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG)
     logging.basicConfig()
     log.setLevel(log_levels[opts.verbose % 5])
 
-    identify_modules(*args)
+    identify_modules(*args, real_path=opts.real_path,
+        show_directory=opts.show_directory)
 
     return 0
 
