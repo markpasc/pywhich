@@ -14,7 +14,7 @@ class ModuleNotFound(Exception):
     pass
 
 
-def identify_module(arg, real_path=None, show_directory=None):
+def identify_module(arg, real_path=None, show_directory=None, find_source=None):
     try:
         __import__(arg)
     except Exception, exc:
@@ -23,7 +23,7 @@ def identify_module(arg, real_path=None, show_directory=None):
     mod = sys.modules[arg]
     filename = mod.__file__
 
-    if filename.endswith('.pyc') or filename.endswith('.pyo'):
+    if find_source and (filename.endswith('.pyc') or filename.endswith('.pyo')):
         sourcefile = filename[:-1]
         if os.access(sourcefile, os.F_OK):
             filename = sourcefile
@@ -77,6 +77,8 @@ def main(argv=None):
         default=False, help="dereference symlinks")
     parser.add_option('-b', action="store_true", dest="show_directory",
         default=False, help="show directory instead of filename")
+    parser.add_option('-s', '--source', action="store_true", dest="find_source",
+        default=False, help="find .py files for .pyc/.pyo files")
 
     opts, args = parser.parse_args()
 
@@ -85,7 +87,7 @@ def main(argv=None):
     log.setLevel(log_levels[opts.verbose % 5])
 
     identify_modules(*args, real_path=opts.real_path,
-        show_directory=opts.show_directory)
+        show_directory=opts.show_directory, find_source=opts.find_source)
 
     return 0
 
