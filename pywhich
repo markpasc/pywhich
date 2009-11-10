@@ -49,7 +49,7 @@ def identify_modules(*args, **kwargs):
         try:
             filepath = identify_module(modulename, **kwargs)
         except ModuleNotFound, exc:
-            print error_template % {
+            print >>sys.stderr, error_template % {
                 'mod': modulename,
                 'error': str(exc),
             }
