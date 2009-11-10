@@ -9,6 +9,7 @@ DOT = '.'
 
 log = logging.getLogger('pywhich')
 
+
 def identify_module(arg):
     try:
         __import__(arg)
@@ -25,12 +26,14 @@ def identify_module(arg):
 
     return filename
 
+
 def identify_modules(*args):
     if len(args) > 1:
         for arg in args:
             print "%s: %s" % (arg, identify_module(arg))
     else:
         print identify_module(args[0])
+
 
 def main(argv=None):
     if argv is None:
@@ -52,6 +55,7 @@ def main(argv=None):
     identify_modules(*args)
 
     return 0
+
 
 if __name__ == '__main__':
     sys.exit(main())
