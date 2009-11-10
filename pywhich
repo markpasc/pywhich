@@ -14,7 +14,8 @@ class ModuleNotFound(Exception):
     pass
 
 
-def identify_module(arg, real_path=None, show_directory=None, find_source=None):
+def identify_module(arg, real_path=None, show_directory=None,
+    find_source=None, hide_init=None):
     try:
         __import__(arg)
     except Exception, exc:
@@ -31,7 +32,8 @@ def identify_module(arg, real_path=None, show_directory=None, find_source=None):
     if real_path:
         filename = os.path.realpath(filename)
 
-    if show_directory:
+    if show_directory or (hide_init and
+        os.path.basename(filename).startswith('__init__.')):
         filename = os.path.dirname(filename)
 
     return filename
@@ -77,6 +79,8 @@ def main(argv=None):
         default=False, help="dereference symlinks")
     parser.add_option('-b', action="store_true", dest="show_directory",
         default=False, help="show directory instead of filename")
+    parser.add_option('-i', '--hide-init', action="store_true", dest="hide_init",
+        default=False, help="show directory if the module ends in __init__.py")
     parser.add_option('-s', '--source', action="store_true", dest="find_source",
         default=False, help="find .py files for .pyc/.pyo files")
 
@@ -87,7 +91,8 @@ def main(argv=None):
     log.setLevel(log_levels[opts.verbose % 5])
 
     identify_modules(*args, real_path=opts.real_path,
-        show_directory=opts.show_directory, find_source=opts.find_source)
+        show_directory=opts.show_directory, find_source=opts.find_source,
+        hide_init=opts.hide_init)
 
     return 0
 
