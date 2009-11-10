@@ -10,11 +10,15 @@ DOT = '.'
 log = logging.getLogger('pywhich')
 
 
+class ModuleNotFound(Exception):
+    pass
+
+
 def identify_module(arg):
     try:
         __import__(arg)
     except Exception, exc:
-        return "Module '%s' not found (%s: %s)" % (arg, type(exc).__name__, str(exc))
+        raise ModuleNotFound("%s: %s" % (type(exc).__name__, str(exc)))
 
     mod = sys.modules[arg]
     filename = mod.__file__
@@ -27,12 +31,27 @@ def identify_module(arg):
     return filename
 
 
-def identify_modules(*args):
-    if len(args) > 1:
-        for arg in args:
-            print "%s: %s" % (arg, identify_module(arg))
+def identify_modules(*args, **kwargs):
+    if len(args) == 1:
+        path_template = "%(file)s"
+        error_template = "Module '%(mod)s' not found (%(error)s)"
     else:
-        print identify_module(args[0])
+        path_template = "%(mod)s: %(file)s"
+        error_template = "%(mod)s: not found (%(error)s)"
+
+    for modulename in args:
+        try:
+            filepath = identify_module(modulename, **kwargs)
+        except ModuleNotFound, exc:
+            print error_template % {
+                'mod': modulename,
+                'error': str(exc),
+            }
+        else:
+            print path_template % {
+                'mod': modulename,
+                'file': filepath
+            }
 
 
 def main(argv=None):
