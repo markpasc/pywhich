@@ -90,9 +90,9 @@ def main(argv=None):
     logging.basicConfig()
     log.setLevel(log_levels[opts.verbose % 5])
 
-    identify_modules(*args, real_path=opts.real_path,
-        show_directory=opts.show_directory, find_source=opts.find_source,
-        hide_init=opts.hide_init)
+    kwargs = dict((fld, getattr(opts, fld)) for fld
+        in ('real_path', 'show_directory', 'find_source', 'hide_init'))
+    identify_modules(*args, **kwargs)
 
     return 0
 
