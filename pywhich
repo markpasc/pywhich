@@ -14,14 +14,19 @@ class ModuleNotFound(Exception):
     pass
 
 
-def identify_module(arg, real_path=None, show_directory=None,
-    find_source=None, hide_init=None):
+def identify_module(arg):
     try:
         __import__(arg)
     except Exception, exc:
         raise ModuleNotFound("%s: %s" % (type(exc).__name__, str(exc)))
 
     mod = sys.modules[arg]
+    return mod
+
+
+def identify_filepath(arg, real_path=None, show_directory=None,
+    find_source=None, hide_init=None):
+    mod = identify_module(arg)
     filename = mod.__file__
 
     if find_source and (filename.endswith('.pyc') or filename.endswith('.pyo')):
@@ -49,7 +54,7 @@ def identify_modules(*args, **kwargs):
 
     for modulename in args:
         try:
-            filepath = identify_module(modulename, **kwargs)
+            filepath = identify_filepath(modulename, **kwargs)
         except ModuleNotFound, exc:
             print >>sys.stderr, error_template % {
                 'mod': modulename,
@@ -59,6 +64,42 @@ def identify_modules(*args, **kwargs):
             print path_template % {
                 'mod': modulename,
                 'file': filepath
+            }
+
+
+def find_version(*args):
+    if len(args) == 1:
+        ver_template = "%(version)s"
+        error_template = "Distribution/module '%(mod)s' not found: %(error)s"
+    else:
+        ver_template = "%(mod)s: %(version)s"
+        error_template = "%(mod)s: not found: %(error)s"
+
+    import pkg_resources
+    for modulename in args:
+        try:
+
+            try:
+                dist = pkg_resources.get_distribution(modulename)
+            except pkg_resources.DistributionNotFound:
+
+                mod = identify_module(modulename)  # raises ModuleNotFound
+                if not hasattr(mod, '__version__'):
+                    raise ModuleNotFound('module has no __version__')
+                version = mod.__version__
+
+            else:
+                version = dist.version
+
+        except ModuleNotFound, exc:
+            print >>sys.stderr, error_template % {
+                'mod': modulename,
+                'error': str(exc),
+            }
+        else:
+            print ver_template % {
+                'mod': modulename,
+                'version': version,
             }
 
 
@@ -83,6 +124,8 @@ def main(argv=None):
         default=False, help="show directory if the module ends in __init__.py")
     parser.add_option('-s', '--source', action="store_true", dest="find_source",
         default=False, help="find .py files for .pyc/.pyo files")
+    parser.add_option('--ver', action="store_true", dest="find_version",
+        default=False, help="find the version of the named package, not the location on disk")
 
     opts, args = parser.parse_args()
 
@@ -90,9 +133,12 @@ def main(argv=None):
     logging.basicConfig()
     log.setLevel(log_levels[opts.verbose % 5])
 
-    kwargs = dict((fld, getattr(opts, fld)) for fld
-        in ('real_path', 'show_directory', 'find_source', 'hide_init'))
-    identify_modules(*args, **kwargs)
+    if opts.find_version:
+        find_version(*args)
+    else:
+        kwargs = dict((fld, getattr(opts, fld)) for fld
+            in ('real_path', 'show_directory', 'find_source', 'hide_init'))
+        identify_modules(*args, **kwargs)
 
     return 0
 
