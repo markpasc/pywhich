@@ -17,7 +17,8 @@ class ModuleNotFound(Exception):
 def identify_module(arg):
     try:
         __import__(arg)
-    except Exception, exc:
+    except Exception:
+        exc = sys.exc_info()[1]
         raise ModuleNotFound("%s: %s" % (type(exc).__name__, str(exc)))
 
     mod = sys.modules[arg]
@@ -55,16 +56,18 @@ def identify_modules(*args, **kwargs):
     for modulename in args:
         try:
             filepath = identify_filepath(modulename, **kwargs)
-        except ModuleNotFound, exc:
-            print >>sys.stderr, error_template % {
+        except ModuleNotFound:
+            exc = sys.exc_info()[1]
+            sys.stderr.write(error_template % {
                 'mod': modulename,
                 'error': str(exc),
-            }
+            })
+            sys.stderr.write('\n')
         else:
-            print path_template % {
+            print(path_template % {
                 'mod': modulename,
                 'file': filepath
-            }
+            })
 
 
 def find_version(*args):
@@ -91,16 +94,18 @@ def find_version(*args):
             else:
                 version = dist.version
 
-        except ModuleNotFound, exc:
-            print >>sys.stderr, error_template % {
+        except ModuleNotFound:
+            exc = sys.exc_info()[1]
+            sys.stderr.write(error_template % {
                 'mod': modulename,
                 'error': str(exc),
-            }
+            })
+            sys.stderr.write('\n')
         else:
-            print ver_template % {
+            print(ver_template % {
                 'mod': modulename,
                 'version': version,
-            }
+            })
 
 
 def main(argv=None):
