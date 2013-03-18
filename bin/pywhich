@@ -73,10 +73,10 @@ def identify_modules(*args, **kwargs):
 def find_version(*args):
     if len(args) == 1:
         ver_template = "%(version)s"
-        error_template = "Distribution/module '%(mod)s' not found: %(error)s"
+        error_template = "Distribution/module '%(mod)s' not found (%(error)s)"
     else:
         ver_template = "%(mod)s: %(version)s"
-        error_template = "%(mod)s: not found: %(error)s"
+        error_template = "%(mod)s: not found (%(error)s)"
 
     import pkg_resources
     for modulename in args:
