@@ -26,7 +26,10 @@ def identify_module(arg):
 def identify_filepath(arg, real_path=None, show_directory=None,
     find_source=None, hide_init=None):
     mod = identify_module(arg)
-    filename = mod.__file__
+    try:
+        filename = mod.__file__
+    except AttributeError:
+        raise ModuleNotFound("module has no '__file__' attribute; is it a built-in or C module?")
 
     if find_source and (filename.endswith('.pyc') or filename.endswith('.pyo')):
         sourcefile = filename[:-1]
