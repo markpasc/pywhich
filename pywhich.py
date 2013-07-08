@@ -3,16 +3,23 @@ from optparse import OptionParser
 import os
 import sys
 
-DOT = '.'
 
 log = logging.getLogger('pywhich')
+"""A logger in the ``pywhich`` scope."""
 
 
 class ModuleNotFound(Exception):
+    """The requested module could not be imported."""
     pass
 
 
 def identify_module(arg):
+    """Import and return the Python module named in `arg`.
+
+    If the module cannot be imported, a `pywhich.ModuleNotFound` exception is
+    raised.
+
+    """
     try:
         __import__(arg)
     except Exception:
@@ -25,11 +32,32 @@ def identify_module(arg):
 
 def identify_filepath(arg, real_path=None, show_directory=None,
     find_source=None, hide_init=None):
-    mod = identify_module(arg)
+    """Discover and return the disk file path of the Python module named in
+    `arg` by importing the module and returning its ``__file__`` attribute.
+
+    If `find_source` is `True`, the named module is a ``pyc`` or ``pyo`` file,
+    and a corresponding ``.py`` file exists on disk, the path to the ``.py``
+    file is returned instead.
+
+    If `show_directory` is `True`, the path to the directory containing the
+    discovered module file is returned. Similarly, if `hide_init` is `True` and
+    the named module is the ``__init__`` module of a package, the function
+    returns the path to the package directory containing the ``__init__.py``
+    filename.
+
+    If `real_path` is `True` and the discovered module was loaded via symlink,
+    the real path (as determined by `os.path.realpath()`) is returned.
+
+    If the named module cannot be imported or its path on disk determined, this
+    function raises a `pywhich.ModuleNotFound` exception.
+
+    """
+    mod = identify_module(arg)  # raises ModuleNotFound
     try:
         filename = mod.__file__
     except AttributeError:
-        raise ModuleNotFound("module has no '__file__' attribute; is it a built-in or C module?")
+        raise ModuleNotFound("module has no '__file__' attribute; is it a "
+            "built-in or C module?")
 
     if find_source and (filename.endswith('.pyc') or filename.endswith('.pyo')):
         sourcefile = filename[:-1]
@@ -47,6 +75,12 @@ def identify_filepath(arg, real_path=None, show_directory=None,
 
 
 def identify_modules(*args, **kwargs):
+    """Find the disk locations of the given named modules, printing the
+    discovered paths to stdout and errors discovering paths to stderr.
+
+    Any provided keyword arguments are passed to `identify_filepath()`.
+
+    """
     if len(args) == 1:
         path_template = "%(file)s"
         error_template = "Module '%(mod)s' not found (%(error)s)"
@@ -72,6 +106,8 @@ def identify_modules(*args, **kwargs):
 
 
 def find_version(*args):
+    """Find the versions of the given named modules, printing the discovered
+    versions to stdout and errors discovering versions to stderr."""
     if len(args) == 1:
         ver_template = "%(version)s"
         error_template = "Distribution/module '%(mod)s' not found (%(error)s)"
@@ -110,6 +146,11 @@ def find_version(*args):
 
 
 def main(argv=None):
+    """Run the pywhich command as if invoked with arguments `argv`.
+
+    If `argv` is `None`, arguments from `sys.argv` are used.
+
+    """
     if argv is None:
         argv = sys.argv
 
