@@ -60,15 +60,21 @@ def identify_filepath(arg, real_path=None, show_directory=None,
             "built-in or C module?")
 
     if find_source and (filename.endswith('.pyc') or filename.endswith('.pyo')):
+        log.debug("Filename ends in pyc or pyo, so looking for the .py file")
         sourcefile = filename[:-1]
         if os.access(sourcefile, os.F_OK):
             filename = sourcefile
+        else:
+            log.debug("Did not find .py file for path %r, using as-is",
+                filename)
 
     if real_path:
         filename = os.path.realpath(filename)
 
     if show_directory or (hide_init and
         os.path.basename(filename).startswith('__init__.')):
+        log.debug("Showing directories or hiding __init__s, so returning "
+            "directory of %r", filename)
         filename = os.path.dirname(filename)
 
     return filename
@@ -176,9 +182,10 @@ def main(argv=None):
 
     opts, args = parser.parse_args()
 
+    verbose = max(0, min(4, opts.verbose))
     log_levels = (logging.CRITICAL, logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG)
     logging.basicConfig()
-    log.setLevel(log_levels[opts.verbose % 5])
+    log.setLevel(log_levels[verbose])
 
     if opts.find_version:
         find_version(*args)
